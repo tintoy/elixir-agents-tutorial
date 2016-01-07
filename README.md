@@ -1,20 +1,3 @@
-# FE
+# KV
 
-**TODO: Add description**
-
-## Installation
-
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
-
-  1. Add fe to your list of dependencies in `mix.exs`:
-
-        def deps do
-          [{:fe, "~> 0.0.1"}]
-        end
-
-  2. Ensure fe is started before your application:
-
-        def application do
-          [applications: [:fe]]
-        end
-
+Following the Elixir [OTP / Agent tutorial](http://elixir-lang.org/getting-started/mix-otp/agent.html).

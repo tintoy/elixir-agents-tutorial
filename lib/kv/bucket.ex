@@ -1,6 +1,6 @@
 defmodule KV.Bucket do
   @doc """
-  Starts a new bucket (key / value pair storage).
+  Start a new bucket (key / value pair storage).
   """
   def start_link do
     Agent.start_link(fn -> %{} end)
@@ -18,5 +18,12 @@ defmodule KV.Bucket do
   """
   def put(bucket, key, value) do
     Agent.update(bucket, &Map.put(&1, key, value))
+  end
+
+  @doc """
+  Remove the specified `key` (and its corresponding `value`) from the bucket, returning the `value` if present.
+  """
+  def delete(bucket, key) do
+    Agent.get_and_update(bucket, &Map.pop(&1, key))
   end
 end

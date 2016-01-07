@@ -1,6 +1,6 @@
 defmodule FETest do
   use ExUnit.Case
-  doctest FE
+  doctest KV
 
   test "always passes" do
     assert 1 + 1 == 2
