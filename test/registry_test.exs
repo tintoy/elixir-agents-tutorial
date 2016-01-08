@@ -11,9 +11,9 @@ defmodule KV.RegistryTest do
   test "can spawn a new bucket", %{registry: registry} do
     assert KV.Registry.lookup(registry, "shopping") == :error
 
-    KV.Registry.create(registry, "shopping")
-    assert {:ok, bucket} = KV.Registry.lookup(registry, "shopping")
-
+    bucket = KV.Registry.create(registry, "shopping")
+    assert bucket != :error
+    
     assert KV.Bucket.get(bucket, "milk") == nil
 
     KV.Bucket.put(bucket, "milk", 3)
@@ -21,8 +21,7 @@ defmodule KV.RegistryTest do
   end
 
   test "removes buckets on exit", %{registry: registry} do
-    KV.Registry.create(registry, "shopping")
-    {:ok, bucket} = KV.Registry.lookup(registry, "shopping")
+    bucket = KV.Registry.create(registry, "shopping")
 
     Agent.stop(bucket)
     assert KV.Registry.lookup(registry, "shopping") == :error
