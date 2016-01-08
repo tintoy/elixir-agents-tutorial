@@ -4,7 +4,7 @@ defmodule KV.Registry do
   ## Client API
 
   @doc """
-  Starts the registry
+  Start a new instance of the registry
   """
   def start_link() do
     GenServer.start_link(__MODULE__, :ok, [])
