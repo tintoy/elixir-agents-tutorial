@@ -1,0 +1,27 @@
+defmodule KV.Bucket.Supervisor do
+  use Supervisor
+
+  @name KV.Bucket.Supervisor
+
+  @doc """
+  Start the bucket supervisor and link it to the calling process.
+  """
+  def start_link() do
+     Supervisor.start_link(__MODULE__, :ok, name: @name)
+  end
+
+  @doc """
+  Start a new bucket.
+  """
+  def start_bucket do
+    Supervisor.start_child(@name, [])
+  end
+
+  def init(:ok) do
+    children = [
+      worker(KV.Bucket, [], restart: :temporary)
+    ]
+
+    supervise(children, strategy: :simple_one_for_one)
+  end
+end

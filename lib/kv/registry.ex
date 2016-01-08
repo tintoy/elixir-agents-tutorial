@@ -4,10 +4,10 @@ defmodule KV.Registry do
   ## Client API
 
   @doc """
-  Start a new instance of the registry
+  Start a new instance of the registry with the specified `name`.
   """
-  def start_link() do
-    GenServer.start_link(__MODULE__, :ok, [])
+  def start_link(name) do
+    GenServer.start_link(__MODULE__, :ok, name: name)
   end
 
   @doc """
@@ -67,7 +67,7 @@ defmodule KV.Registry do
         {buckets_by_name, names_by_monitor_ref} # Same server state data
       }
     else
-      {:ok, bucket} = KV.Bucket.start_link
+      {:ok, bucket} = KV.Bucket.Supervisor.start_bucket()
       buckets_by_name = Map.put(buckets_by_name, name, bucket)
 
       monitor_ref = Process.monitor(bucket) # We'll want to remove this bucket from the registry when it stops.

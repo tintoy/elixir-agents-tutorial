@@ -3,8 +3,8 @@ defmodule KV.RegistryTest do
 
   doctest KV.Registry
 
-  setup do
-    {:ok, registry} = KV.Registry.start_link
+  setup context do
+    {:ok, registry} = KV.Registry.start_link(context.test)
     {:ok, registry: registry}
   end
 
@@ -13,7 +13,7 @@ defmodule KV.RegistryTest do
 
     bucket = KV.Registry.create(registry, "shopping")
     assert bucket != :error
-    
+
     assert KV.Bucket.get(bucket, "milk") == nil
 
     KV.Bucket.put(bucket, "milk", 3)
@@ -24,6 +24,19 @@ defmodule KV.RegistryTest do
     bucket = KV.Registry.create(registry, "shopping")
 
     Agent.stop(bucket)
+    assert KV.Registry.lookup(registry, "shopping") == :error
+  end
+
+  test "removes bucket on crash", %{registry: registry} do
+    bucket = KV.Registry.create(registry, "shopping")
+    assert bucket != :error
+
+    Process.exit(bucket, :shutdown)
+
+    # Wait until process is dead
+    ref = Process.monitor(bucket)
+    assert_receive {:DOWN, ^ref, _, _, _}
+
     assert KV.Registry.lookup(registry, "shopping") == :error
   end
 end
