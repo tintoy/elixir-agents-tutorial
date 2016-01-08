@@ -11,6 +11,13 @@ defmodule KV.Registry do
   end
 
   @doc """
+  Stop the registry `server`.
+  """
+  def stop(server) do
+    GenServer.stop(server)
+  end
+
+  @doc """
   Look up the PID of the bucket with the specified `name` in the specified `server`.
   """
   def lookup(server, name) do
