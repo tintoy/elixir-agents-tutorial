@@ -34,7 +34,10 @@ defmodule KV.Registry do
   ## Server callbacks
 
   def init(:ok) do
-    {:ok, %{}}
+    bucket_names = %{}
+    monitor_refs = %{}
+
+    {:ok, {bucket_names, monitor_refs}}
   end
 
   # My best guess (reading the docs would be cheating) is that these handle_xxx methods take:
@@ -47,28 +50,48 @@ defmodule KV.Registry do
   # * The new server state data.
 
   # Handle a synchronous call to the server (*must* reply to caller).
-  def handle_call({:lookup, name}, _from, names) do
-     {
-       :reply, # Resulting command (send reply to caller)
-       Map.fetch(names, name), # Resulting command parameter (data to send to caller)
-       names # New server state data
-     }
+  def handle_call({:lookup, name}, _from, {bucket_names, _} = state) do
+    {
+      :reply, # Resulting command (send reply to caller)
+      Map.fetch(bucket_names, name), # Resulting command parameter (data to send to caller)
+      state # Same server state data
+    }
   end
 
   # Handle an asynchronous call to the server (*cannot* reply to the caller, because we don't know who that is).
-  def handle_cast({:create, name}, names) do
-    if Map.has_key?(names, name) do
+  def handle_cast({:create, name}, {bucket_names, monitor_refs}) do
+    if Map.has_key?(bucket_names, name) do
       {
         :noreply, # Resulting command (don't reply to caller)
-        names # New server state data
+        {bucket_names, monitor_refs} # Same server state data
       }
     else
       {:ok, bucket} = KV.Bucket.start_link
+      bucket_names = Map.put(bucket_names, name, bucket)
+
+      monitor_ref = Process.monitor(bucket) # We'll want to remove this bucket from the registry when it stops.
+      monitor_refs = Map.put(monitor_refs, monitor_ref, name)
 
       {
         :noreply, # Resulting command (don't reply to caller)
-        Map.put(names, name, bucket) # New server state data
+        {bucket_names, monitor_refs} # New server state data
       }
     end
+  end
+
+  # Handle notification of bucket shutdown
+  def handle_info({:DOWN, monitor_ref, :process, _pid, _reason}, {bucket_names, monitor_refs}) do
+    {bucket_name, monitor_refs} = Map.pop(monitor_refs, monitor_ref)
+    bucket_names = Map.delete(bucket_names, bucket_name)
+
+    {
+      :noreply, # Resulting command (don't reply to caller)
+      {bucket_names, monitor_refs} # New server state data
+    }
+  end
+
+  # Catch-all (ignore any other type of message)
+  def handle_info(_msg, state) do
+    {:noreply, state}
   end
 end
